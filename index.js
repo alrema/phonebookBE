@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 
+const apiPath = "/api/persons";
+
 let persons = [
   {
     name: "Arto Hellas",
@@ -26,6 +28,22 @@ let persons = [
 
 app.get("/api/persons", (request, response) => {
   response.json(persons);
+});
+
+app.get(`${apiPath}/:id`, (request, response) => {
+  const id = Number(request.params.id);
+
+  if (Number.isNaN(id) || id < 0) {
+    response.status(400);
+    response.send("Id must be a positive integer");
+    return;
+  }
+  if (id > persons.length) {
+    response.status(404);
+    response.send("Person not found");
+    return;
+  }
+  response.json(persons[id]);
 });
 
 app.get("/info", (request, response) => {
