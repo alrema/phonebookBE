@@ -33,17 +33,35 @@ app.get("/api/persons", (request, response) => {
 app.get(`${apiPath}/:id`, (request, response) => {
   const id = Number(request.params.id);
 
+  if (Number.isNaN(id) || id <= 0) {
+    response.status(400);
+    response.send("Id must be a positive integer");
+    return;
+  }
+  const personFound = persons.find((person) => {
+    return person.id === id;
+  });
+  if (!personFound) {
+    response.status(404);
+    response.send("Person not found");
+    return;
+  }
+  response.json(personFound);
+});
+
+app.delete(`${apiPath}/:id`, (request, response) => {
+  const id = Number(request.params.id);
+
   if (Number.isNaN(id) || id < 0) {
     response.status(400);
     response.send("Id must be a positive integer");
     return;
   }
-  if (id > persons.length) {
-    response.status(404);
-    response.send("Person not found");
-    return;
-  }
-  response.json(persons[id]);
+
+  persons = persons.filter((person) => {
+    return person.id != id;
+  });
+  response.status(204).end();
 });
 
 app.get("/info", (request, response) => {
