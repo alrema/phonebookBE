@@ -35,9 +35,9 @@ app.get(`${apiPath}/:id`, (request, response) => {
   const id = Number(request.params.id);
 
   if (Number.isNaN(id) || id <= 0) {
-    response.status(400);
-    response.send("Id must be a positive integer");
-    return;
+    return response.status(400).json({
+      error: "Id must be a positive integer",
+    });
   }
   const personFound = persons.find((person) => {
     return person.id === id;
@@ -54,9 +54,9 @@ app.delete(`${apiPath}/:id`, (request, response) => {
   const id = Number(request.params.id);
 
   if (Number.isNaN(id) || id < 0) {
-    response.status(400);
-    response.send("Id must be a positive integer");
-    return;
+    return response.status(400).json({
+      error: "Id must be a positive integer",
+    });
   }
 
   persons = persons.filter((person) => {
@@ -71,6 +71,16 @@ app.post(apiPath, (request, response) => {
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: "Bad body content. name and number must be providen",
+    });
+  }
+
+  const personFound = persons.find((person) => {
+    return person.name === body.name;
+  });
+
+  if (personFound) {
+    return response.status(400).json({
+      error: "Name must be unique",
     });
   }
 
