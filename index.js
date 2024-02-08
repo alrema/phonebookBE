@@ -15,19 +15,6 @@ app.use(express.static("build"));
 app.use(express.json());
 app.use(morganMid);
 
-let persons = [
-  {
-    name: "Dan Abramov",
-    number: "12-43-234345",
-    id: 3,
-  },
-  {
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-    id: 4,
-  },
-];
-
 const apiPath = "/api/persons";
 
 app.get("/api/persons", (request, response) => {
@@ -79,25 +66,23 @@ app.post(apiPath, (request, response) => {
     });
   }
 
-  const personFound = persons.find((person) => {
-    return person.name === body.name;
+  Person.find({ name: body.name }).then((personFound) => {
+    if (personFound) {
+      return response.status(400).json({
+        error: "Name must be unique",
+      });
+    }
   });
 
-  if (personFound) {
-    return response.status(400).json({
-      error: "Name must be unique",
-    });
-  }
-
-  const person = {
+  const person = new Person({
     name: body.name,
     number: body.number,
     id: Math.floor(Math.random() * 100000) + 1,
-  };
+  });
 
-  persons = persons.concat(person);
-
-  response.json(person);
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
 app.get("/info", (request, response) => {
