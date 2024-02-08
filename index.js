@@ -73,23 +73,49 @@ app.post(apiPath, (request, response) => {
     });
   }
 
-  Person.find({ name: body.name }).then((personFound) => {
+  Person.findOne({ name: body.name }).then((personFound) => {
     if (personFound) {
+      console.log(`Person ${body.name} already exists`);
       return response.status(400).json({
         error: "Name must be unique",
       });
     }
-  });
 
-  const person = new Person({
-    name: body.name,
-    number: body.number,
-    id: Math.floor(Math.random() * 100000) + 1,
-  });
+    const person = new Person({
+      name: body.name,
+      number: body.number,
+      id: Math.floor(Math.random() * 100000) + 1,
+    });
 
-  person.save().then((savedPerson) => {
-    response.json(savedPerson);
+    person.save().then((savedPerson) => {
+      return response.json(savedPerson).end();
+    });
   });
+});
+
+app.put(`${apiPath}/:id`, (request, response) => {
+  const id = Number(request.params.id);
+  Person.find({ id: id }).then((personFound) => {
+    if (!personFound) {
+      return response.status(404).json({
+        error: "Person not found",
+      });
+    }
+  });
+  const body = request.body;
+
+  if (!body.number) {
+    return response.status(400).json({
+      error: "Bad body content. name and number must be providen",
+    });
+  }
+
+  Person.updateOne({ id: id }, { number: body.number })
+    .then(response.status(204).end())
+    .catch((error) => {
+      console.log(error);
+      next(error);
+    });
 });
 
 app.get("/info", (request, response) => {
