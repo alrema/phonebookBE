@@ -9,6 +9,7 @@ const morganMid = morgan(
   ":method :url :status :res[content-length] - :response-time ms :body "
 );
 app.use(cors());
+app.use(express.static("build"));
 app.use(express.json());
 app.use(morganMid);
 
