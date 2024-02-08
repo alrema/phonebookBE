@@ -1,6 +1,8 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
+const Person = require("./models/persons");
 const app = express();
 morgan.token("body", function (req, res) {
   return JSON.stringify(req.body);
@@ -13,19 +15,7 @@ app.use(express.static("build"));
 app.use(express.json());
 app.use(morganMid);
 
-const apiPath = "/api/persons";
-
 let persons = [
-  {
-    name: "Arto Hellas",
-    number: "040-123456",
-    id: 1,
-  },
-  {
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-    id: 2,
-  },
   {
     name: "Dan Abramov",
     number: "12-43-234345",
@@ -38,8 +28,12 @@ let persons = [
   },
 ];
 
+const apiPath = "/api/persons";
+
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
 
 app.get(`${apiPath}/:id`, (request, response) => {
@@ -50,15 +44,15 @@ app.get(`${apiPath}/:id`, (request, response) => {
       error: "Id must be a positive integer",
     });
   }
-  const personFound = persons.find((person) => {
-    return person.id === id;
+
+  Person.find({ id: id }).then((personFound) => {
+    if (!personFound) {
+      response.status(404);
+      response.send("Person not found");
+      return;
+    }
+    response.json(personFound);
   });
-  if (!personFound) {
-    response.status(404);
-    response.send("Person not found");
-    return;
-  }
-  response.json(personFound);
 });
 
 app.delete(`${apiPath}/:id`, (request, response) => {
