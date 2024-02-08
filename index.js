@@ -43,7 +43,7 @@ app.get(`${apiPath}/:id`, (request, response) => {
     })
     .catch((error) => {
       console.log(error);
-      response.status(500).end();
+      next(error);
     });
 });
 
@@ -60,7 +60,7 @@ app.delete(`${apiPath}/:id`, (request, response) => {
     .then(response.status(204).end())
     .catch((error) => {
       console.log(error);
-      response.status(500).end();
+      next(error);
     });
 });
 
@@ -97,6 +97,18 @@ app.get("/info", (request, response) => {
   <p>${new Date()}</p>`;
   response.send(res);
 });
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
