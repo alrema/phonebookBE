@@ -17,13 +17,15 @@ app.use(morganMid);
 
 const apiPath = "/api/persons";
 
-app.get(`${apiPath}`, (request, response) => {
-  Person.find({}).then((persons) => {
-    response.json(persons);
-  });
+app.get(`${apiPath}`, (request, response, next) => {
+  Person.find({})
+    .then((persons) => {
+      response.json(persons);
+    })
+    .catch((error) => next(error));
 });
 
-app.get(`${apiPath}/:id`, (request, response) => {
+app.get(`${apiPath}/:id`, (request, response, next) => {
   const id = Number(request.params.id);
 
   if (Number.isNaN(id) || id <= 0) {
@@ -47,7 +49,7 @@ app.get(`${apiPath}/:id`, (request, response) => {
     });
 });
 
-app.delete(`${apiPath}/:id`, (request, response) => {
+app.delete(`${apiPath}/:id`, (request, response, next) => {
   const id = Number(request.params.id);
 
   if (Number.isNaN(id) || id < 0) {
@@ -64,7 +66,7 @@ app.delete(`${apiPath}/:id`, (request, response) => {
     });
 });
 
-app.post(apiPath, (request, response) => {
+app.post(apiPath, (request, response, next) => {
   const body = request.body;
 
   if (!body.name || !body.number) {
@@ -73,27 +75,21 @@ app.post(apiPath, (request, response) => {
     });
   }
 
-  Person.findOne({ name: body.name }).then((personFound) => {
-    if (personFound) {
-      console.log(`Person ${body.name} already exists`);
-      return response.status(400).json({
-        error: "Name must be unique",
-      });
-    }
-
-    const person = new Person({
-      name: body.name,
-      number: body.number,
-      id: Math.floor(Math.random() * 100000) + 1,
-    });
-
-    person.save().then((savedPerson) => {
-      return response.json(savedPerson).end();
-    });
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+    id: Math.floor(Math.random() * 100000) + 1,
   });
+
+  person
+    .save()
+    .then((savedPerson) => {
+      return response.json(savedPerson).end();
+    })
+    .catch((error) => next(error));
 });
 
-app.put(`${apiPath}/:id`, (request, response) => {
+app.put(`${apiPath}/:id`, (request, response, next) => {
   const id = Number(request.params.id);
   Person.find({ id: id }).then((personFound) => {
     if (!personFound) {
@@ -118,7 +114,7 @@ app.put(`${apiPath}/:id`, (request, response) => {
     });
 });
 
-app.get("/info", (request, response) => {
+app.get("/info", (request, response, next) => {
   Person.find({})
     .then((persons) => {
       const res = `<p>Phonebook has info for ${persons.length} people</p>
@@ -136,6 +132,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
