@@ -106,7 +106,7 @@ app.put(`${apiPath}/:id`, (request, response, next) => {
     });
   }
 
-  Person.updateOne({ id: id }, { number: body.number })
+  Person.updateOne({ id: id }, { number: body.number }, { runValidators: true })
     .then(response.status(204).end())
     .catch((error) => {
       console.log(error);
