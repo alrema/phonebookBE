@@ -17,7 +17,7 @@ app.use(morganMid);
 
 const apiPath = "/api/persons";
 
-app.get("/api/persons", (request, response) => {
+app.get(`${apiPath}`, (request, response) => {
   Person.find({}).then((persons) => {
     response.json(persons);
   });
@@ -32,14 +32,19 @@ app.get(`${apiPath}/:id`, (request, response) => {
     });
   }
 
-  Person.find({ id: id }).then((personFound) => {
-    if (!personFound) {
-      response.status(404);
-      response.send("Person not found");
-      return;
-    }
-    response.json(personFound);
-  });
+  Person.findOne({ id: id })
+    .then((personFound) => {
+      if (!personFound) {
+        response.status(404);
+        response.send("Person not found");
+        return;
+      }
+      response.json(personFound);
+    })
+    .catch((error) => {
+      console.log(error);
+      response.status(500).end();
+    });
 });
 
 app.delete(`${apiPath}/:id`, (request, response) => {
@@ -51,10 +56,12 @@ app.delete(`${apiPath}/:id`, (request, response) => {
     });
   }
 
-  persons = persons.filter((person) => {
-    return person.id != id;
-  });
-  response.status(204).end();
+  Person.deleteOne({ id: id })
+    .then(response.status(204).end())
+    .catch((error) => {
+      console.log(error);
+      response.status(500).end();
+    });
 });
 
 app.post(apiPath, (request, response) => {
